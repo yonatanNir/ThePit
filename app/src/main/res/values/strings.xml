@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">ThePit</string>
+    <string name="action_settings">Settings</string>
+    <string name="add_a_new_point">Add a New Point To The Graph</string>
+</resources>

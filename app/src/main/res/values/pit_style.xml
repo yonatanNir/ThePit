@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="Pit">
+        <attr name="initialPointsAmount" format="integer" />
+        <attr name="pointColor" format="color" />
+        <attr name="pointRadius" format="dimension" />
+        <attr name="axisColor" format="color" />
+        <attr name="axisWidth" format="dimension" />
+        <attr name="edgeColor" format="color" />
+        <attr name="edgeWidth" format="dimension" />
+    </declare-styleable>
+</resources>

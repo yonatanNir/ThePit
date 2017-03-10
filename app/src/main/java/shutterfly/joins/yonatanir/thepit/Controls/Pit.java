@@ -36,7 +36,7 @@ public class Pit extends ViewGroup
     private float pointRadius, axisWidth, edgeWidth;
     private int actualHeight, actualWidth;
     private Paint pointsPaint, edgesPaint, axisPaint;
-    private float maxX;
+    private float maxXWithPoint, maxYWithPoint, minXWithPoint, minYWithPoint;
     private LinkedList<PitPoint> pointsList;
     private boolean sizeChanged;
 
@@ -232,8 +232,11 @@ public class Pit extends ViewGroup
         {
             float spaceBetweenPoints = actualWidth / initialPointsNum;
             float xStartPoint = spaceBetweenPoints / 2; //some "padding" to make the points distribute in the middle
+            minXWithPoint = xStartPoint;
             float y1 = actualHeight / 4;     // the upper half
+            minYWithPoint = y1; // since the view's (0,0) is in top left than lower on the screen means larger y
             float y2 = actualHeight * 3 / 4; // lower half
+            maxYWithPoint = y2;
             for(int i=0; i < initialPointsNum; i++)
             {
                 PitPoint p;
@@ -246,9 +249,9 @@ public class Pit extends ViewGroup
                 {
                     p = new PitPoint(xPosition, y2);
                 }
-                maxX = xPosition;
                 pointsList.add(p);
             }
+            maxXWithPoint = xStartPoint + ((initialPointsNum - 1) * spaceBetweenPoints);
         }
     }
 
@@ -305,13 +308,11 @@ public class Pit extends ViewGroup
     public void addNewPointToGraph(float x, float y)
     {
         float newX = getRelativeX(x);
-        PitPoint point = new PitPoint(newX, getRelativeY(y));
+        float newY = getRelativeY(y);
+        PitPoint point = new PitPoint(newX, newY);
         pointsList.add(point);
         Collections.sort(pointsList);
-        if(newX > maxX)
-        {
-            maxX = newX;
-        }
+        updateMinMaxCoordinatesIfNeeded(newX, newY);
         invalidateAndRedraw();
     }
 
@@ -330,7 +331,7 @@ public class Pit extends ViewGroup
         private float dy = 0;
         private float initialX, initialY;
         private PitPoint draggedPoint;
-        private float ACCEPTABLE_CLICK_DISTANCE_FROM_POINT = 25 + pointRadius;
+        private float ACCEPTABLE_CLICK_DISTANCE_FROM_POINT = 30 + pointRadius;
 
         @Override
         public boolean onTouch(View v, MotionEvent event)
@@ -366,10 +367,7 @@ public class Pit extends ViewGroup
                 {
                     if(draggedPoint != null)
                     {
-                        if(draggedPoint.x > maxX)
-                        {
-                            maxX = draggedPoint.x;
-                        }
+                        updateMinMaxCoordinatesIfNeeded(draggedPoint.x, draggedPoint.y);
                         draggedPoint = null;
                     }
                     break;
@@ -409,7 +407,7 @@ public class Pit extends ViewGroup
         //A method which returns the point the user is touching, if he touches close enough to the point
         private PitPoint getPointOfCoordinates(float pressedX, float pressedY)
         {
-            if(pressedX > maxX)
+            if(!isCoordinatesInRangeOfPoints(pressedX, pressedY))
             {
                 return null;
             }
@@ -421,6 +419,51 @@ public class Pit extends ViewGroup
                 }
             }
             return null;
+        }
+
+        //A method to check if the (x,y) the user pressed is in the range of the points in the pit.
+        //If return is false, there is no point to even begin iterating all over the points.
+        private boolean isCoordinatesInRangeOfPoints(float pressedX, float pressedY)
+        {
+            if(pressedX > maxXWithPoint + ACCEPTABLE_CLICK_DISTANCE_FROM_POINT)
+            {
+                return false;
+            }
+            if(pressedX < minXWithPoint - ACCEPTABLE_CLICK_DISTANCE_FROM_POINT)
+            {
+                return false;
+            }
+            if(pressedY > maxYWithPoint + ACCEPTABLE_CLICK_DISTANCE_FROM_POINT)
+            {
+                return false;
+            }
+            if(pressedY < minYWithPoint - ACCEPTABLE_CLICK_DISTANCE_FROM_POINT)
+            {
+                return false;
+            }
+            return true;
+        }
+    }
+
+    //This method checks if given (x,y) is larger or smaller than current max/min (x,y).
+    // If they are, the min/max will be updated
+    private void updateMinMaxCoordinatesIfNeeded(float x, float y)
+    {
+        if(x > maxXWithPoint)
+        {
+            maxXWithPoint = x;
+        }
+        else if(x < minXWithPoint)
+        {
+            minXWithPoint = x;
+        }
+        if(y > maxYWithPoint)
+        {
+            maxYWithPoint = y;
+        }
+        else if(y < minYWithPoint)
+        {
+            minYWithPoint = y;
         }
     }
 
